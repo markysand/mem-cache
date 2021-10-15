@@ -11,7 +11,7 @@ Deno.test("returns promise", async () => {
 
   const f = () => Promise.resolve("ok");
 
-  const result = await c.getOrAdd("myKey", f);
+  const result = await c.get("myKey", f);
 
   assertEquals(result, "ok");
   c.destroy();
@@ -21,8 +21,8 @@ Deno.test("returns different promises", async () => {
 
   const f = (value: string) => () => Promise.resolve(value);
 
-  assertEquals(await c.getOrAdd("myKey", f("ok")), "ok");
-  assertEquals(await c.getOrAdd("myKey2", f("ok2")), "ok2");
+  assertEquals(await c.get("myKey", f("ok")), "ok");
+  assertEquals(await c.get("myKey2", f("ok2")), "ok2");
   c.destroy();
 });
 Deno.test("will cache", async () => {
@@ -30,8 +30,8 @@ Deno.test("will cache", async () => {
 
   const f = (value: string) => () => Promise.resolve(value);
 
-  assertEquals(await c.getOrAdd("myKey", f("first")), "first");
-  assertEquals(await c.getOrAdd("myKey", f("second")), "first");
+  assertEquals(await c.get("myKey", f("first")), "first");
+  assertEquals(await c.get("myKey", f("second")), "first");
   c.destroy();
 });
 
@@ -42,9 +42,9 @@ Deno.test("does not return expired value", async () => {
   try {
     const f = (value: string) => () => Promise.resolve(value);
 
-    assertEquals(await c.getOrAdd("myKey", f("first")), "first");
+    assertEquals(await c.get("myKey", f("first")), "first");
     t.tick(10);
-    assertEquals(await c.getOrAdd("myKey", f("second")), "second");
+    assertEquals(await c.get("myKey", f("second")), "second");
   } finally {
     c.destroy();
     t.restore();
@@ -58,7 +58,7 @@ Deno.test("clears expired value", async () => {
   try {
     const f = (value: string) => () => Promise.resolve(value);
 
-    await c.getOrAdd("myKey", f("first"));
+    await c.get("myKey", f("first"));
 
     assertEquals(c.length, 1);
     t.tick(5 * AsyncMemCache.INTERVAL_MULTIPLIER + 1);
@@ -80,8 +80,8 @@ Deno.test("calls getFromSource only once while pending", async () => {
         setTimeout(() => resolve(value), 1);
       });
 
-    const p1 = c.getOrAdd("myKey", f("first"));
-    const p2 = c.getOrAdd("myKey", f("second"));
+    const p1 = c.get("myKey", f("first"));
+    const p2 = c.get("myKey", f("second"));
     const val1 = await p1;
     const val2 = await p2;
 
@@ -100,7 +100,7 @@ Deno.test("handles failure", async () => {
     const f = (value: Error) => () => Promise.reject(value);
 
     await assertRejects(
-      () => c.getOrAdd("myKey", f(new Error("boom"))),
+      () => c.get("myKey", f(new Error("boom"))),
       Error,
       "boom"
     );
@@ -116,7 +116,7 @@ Deno.test("method shouldCache", async () => {
   try {
     const f = () => Promise.resolve("");
 
-    assertEquals<string>(await c.getOrAdd("myKey", f), "");
+    assertEquals<string>(await c.get("myKey", f), "");
     assertEquals<number>(c.length, 0);
   } finally {
     c.destroy();

@@ -48,7 +48,7 @@ export class AsyncMemCache<T> {
     return Object.keys(this.storage).length;
   }
 
-  getOrAdd(key: string, getFromSource: () => Promise<T>): Promise<T> {
+  get(key: string, getFromSource: () => Promise<T>): Promise<T> {
     if (!(key in this.storage) || this.expired(this.storage[key])) {
       const innerPromise = getFromSource();
 
