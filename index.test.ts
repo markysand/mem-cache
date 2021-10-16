@@ -16,6 +16,18 @@ Deno.test("returns promise", async () => {
   assertEquals(result, "ok");
   c.destroy();
 });
+
+Deno.test("works with a non promise", async () => {
+  const c = new AsyncMemCache<string>(1);
+
+  // deno-lint-ignore no-explicit-any
+  const f = () => <any>"ok";
+
+  const result = await c.get("myKey", f);
+
+  assertEquals(result, "ok");
+  c.destroy();
+});
 Deno.test("returns different promises", async () => {
   const c = new AsyncMemCache<string>(1);
 
